@@ -545,7 +545,12 @@ static bool HHVM_FUNCTION(dbase_replace_record, int64_t dbase_identifier, CVarRe
 
 class dbaseExtension: public Extension {
 public:
+  // version parameter is awailable only from HHVM 2.4, we want 2.3 support also for now.
+#ifdef NO_EXTENSION_VERSION_YET    
+  dbaseExtension(): Extension("dbase", "5.1.0") { /* nothing */ }
+#else  
   dbaseExtension(): Extension("dbase") { /* nothing */ }
+#endif  
   virtual void moduleInit() {
     HHVM_FE(dbase_open);
     HHVM_FE(dbase_create);
