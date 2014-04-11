@@ -24,6 +24,8 @@
 */
 
 #include "hphp/runtime/base/base-includes.h"
+#include <fcntl.h>
+#include <boost/optional.hpp>
 #include "dbf.h"
 
 namespace HPHP {
@@ -78,7 +80,7 @@ static open_db_map::iterator dbase_find_connection(int64_t dbase_identifier) {
   return it;
 }
 
-static bool dbase_add_or_replace_record(int dbase_identifier, CVarRef record, boost::optional<int64_t> recnum) {
+static bool dbase_add_or_replace_record(int dbase_identifier, const Variant& record, boost::optional<int64_t> recnum) {
   if (!record.isArray()) {
     raise_warning("Argument two must be of type 'Array'");
     return false;
@@ -244,7 +246,7 @@ static Variant dbase_get_record_impl(int64_t dbase_identifier, int64_t record_nu
   }
 }
 
-static bool HHVM_FUNCTION(dbase_add_record, int64_t dbase_identifier, CVarRef record) {
+static bool HHVM_FUNCTION(dbase_add_record, int64_t dbase_identifier, const Variant& record) {
   return dbase_add_or_replace_record(dbase_identifier, record, boost::none);
 }
 
@@ -258,7 +260,7 @@ static bool HHVM_FUNCTION(dbase_close, int64_t dbase_identifier) {
   }
 }
 
-static Variant HHVM_FUNCTION(dbase_create, const String& filename, CVarRef fields) {
+static Variant HHVM_FUNCTION(dbase_create, const String& filename, const Variant& fields) {
   if (!fields.isArray()) {
     raise_warning("Expected array as second parameter");
     return false;
@@ -537,7 +539,7 @@ static bool HHVM_FUNCTION(dbase_pack, int64_t dbase_identifier) {
   }
 }
 
-static bool HHVM_FUNCTION(dbase_replace_record, int64_t dbase_identifier, CVarRef record, int64_t record_number) {
+static bool HHVM_FUNCTION(dbase_replace_record, int64_t dbase_identifier, const Variant& record, int64_t record_number) {
   return dbase_add_or_replace_record(dbase_identifier, record, record_number);
 }
 
