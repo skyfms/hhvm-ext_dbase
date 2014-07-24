@@ -10,6 +10,6 @@
 <<__Native>> function dbase_delete_record (int $dbase_identifier, int $record_number): bool;
 <<__Native>> function dbase_replace_record (int $dbase_identifier, mixed $record, int $record_number): bool;
 <<__Native>> function dbase_pack (int $dbase_identifier): bool;
-<<__Native>> function dbase_get_record_with_names (int $dbase_identifier, int $record_number): mixer;
+<<__Native>> function dbase_get_record_with_names (int $dbase_identifier, int $record_number): mixed;
 <<__Native>> function dbase_get_header_info (int $dbase_identifier): mixed;
 
