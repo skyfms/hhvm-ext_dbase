@@ -23,7 +23,8 @@
    Modified and ported to HHVM by Kristaps Kaupe.
 */
 
-#include "hphp/runtime/base/base-includes.h"
+#include "hphp/runtime/ext/extension.h"
+#include "hphp/runtime/base/array-iterator.h"
 #include <fcntl.h>
 #include <boost/optional.hpp>
 #include "dbf.h"
