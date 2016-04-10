@@ -17,14 +17,11 @@ are kept until you call `dbase_pack()`.
 
 ### Building & Installation
 
-Installation currently requires a copy of HHVM (version 2.3 or later) to be
-built from source on the local machine (not installed from your distribution's
-packages, even currently available Gentoo ebuilds will not work), instructions
-on how to do this are available on the [HipHop Wiki][fb-wiki]. Once done, the
-following command will build the extension:
+Installation requires HHVM version 3.2.0 or later. On Gentoo systems with 
+[our overlay](https://github.com/skyfms/portage-overlay) you can just 
+`emerge dev-php/hhvm-ext_dbase`. On other systems:
 
 ~~~
-$ export HPHP_HOME=/path/to/hhvm
 $ cd /path/to/extension
 $ ./build.sh
 ~~~
@@ -32,17 +29,15 @@ $ ./build.sh
 This will produce a `dbase.so` file, the dynamically-loadable extension.
 
 To enable the extension, you need to have the following section in your HHVM
-config file:
+config file (php.ini style config):
 
 ~~~
-DynamicExtensionPath = /path/to/hhvm/extensions
-DynamicExtensions {
-        * = dbase.so
-}
+hhvm.dynamic_extension_path = /path/to/hhvm/extensions
+hhvm.dynamic_extensions[dbase] = dbase.so
 ~~~
 
 Where `/path/to/hhvm/extensions` is a folder containing all HipHop extensions,
-and `dbase.so` is in it. This will cause the extension to be loaded when the
+and `shp.so` is in it. This will cause the extension to be loaded when the
 virtual machine starts up.
 
 As always, bugs should be reported to the issue tracker and patches are very
