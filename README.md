@@ -37,7 +37,7 @@ hhvm.dynamic_extensions[dbase] = dbase.so
 ~~~
 
 Where `/path/to/hhvm/extensions` is a folder containing all HipHop extensions,
-and `shp.so` is in it. This will cause the extension to be loaded when the
+and `dbase.so` is in it. This will cause the extension to be loaded when the
 virtual machine starts up.
 
 As always, bugs should be reported to the issue tracker and patches are very
