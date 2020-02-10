@@ -23,8 +23,11 @@
    Modified and ported to HHVM by Kristaps Kaupe.
 */
 
+#include "hphp/runtime/version.h"
 #include "hphp/runtime/ext/extension.h"
 #include "hphp/runtime/base/array-iterator.h"
+#include "hphp/runtime/base/type-array.h"
+#include "hphp/util/thread-local.h"
 #include <fcntl.h>
 #include <boost/optional.hpp>
 #include "dbf.h"
@@ -64,14 +67,35 @@ public:
   dbhead_t* dbh;
 private:
   typedef std::map<dbhead_t*,size_t> dbh_ref_count;
+#ifdef DECLARE_THREAD_LOCAL
   static DECLARE_THREAD_LOCAL(dbh_ref_count, ref_count);
+#else
+  static THREAD_LOCAL(dbh_ref_count, ref_count);
+#endif
 };
 
-IMPLEMENT_THREAD_LOCAL(DBaseConnection::dbh_ref_count, DBaseConnection::ref_count);
+#ifdef IMPLEMENT_THREAD_LOCAL
+  IMPLEMENT_THREAD_LOCAL(DBaseConnection::dbh_ref_count, DBaseConnection::ref_count);
+#else
+  THREAD_LOCAL(DBaseConnection::dbh_ref_count, DBaseConnection::ref_count);
+#endif
 
 typedef std::map<int64_t,std::shared_ptr<DBaseConnection> > open_db_map;
 
-static IMPLEMENT_THREAD_LOCAL(open_db_map, open_dbases);
+#ifdef IMPLEMENT_THREAD_LOCAL
+  static IMPLEMENT_THREAD_LOCAL(open_db_map, open_dbases);
+#else
+  static THREAD_LOCAL(open_db_map, open_dbases);
+#endif
+
+// HPHP::Array::add() was removed in HHVM 3.29, should use set() instead
+#if defined HHVM_VERSION_BRANCH && HHVM_VERSION_BRANCH >= 0x031D00
+  #define ARRAY_ADD(arr,key,value) arr.set(String(key), Variant(value))
+  #define ARRAY_PUSH(arr,value) arr.set(arr.size(), Variant(value))
+#else
+  #define ARRAY_ADD(arr,key,value) arr.add(String(key), Variant(value))
+  #define ARRAY_PUSH(arr,value) arr.set(arr.size(), Variant(value))
+#endif
 
 static open_db_map::iterator dbase_find_connection(int64_t dbase_identifier) {
   open_db_map::iterator it = open_dbases->find(dbase_identifier);
@@ -168,9 +192,9 @@ static Variant dbase_get_record_impl(int64_t dbase_identifier, int64_t record_nu
       case 'C':
       case 'D':
         if (!assoc) {
-          return_value.add(return_value.size(), Variant(String(str_value)));
+          ARRAY_PUSH(return_value, String(str_value));
         } else {
-          return_value.add(String(cur_f->db_fname), Variant(String(str_value)));
+          ARRAY_ADD(return_value, cur_f->db_fname, String(str_value));
         }
         break;
       case 'I':
@@ -181,31 +205,31 @@ static Variant dbase_get_record_impl(int64_t dbase_identifier, int64_t record_nu
           if (errno == ERANGE) {
             // If the integer is too large, keep it as string
             if (!assoc) {
-              return_value.add(return_value.size(), Variant(String(str_value)));
+              ARRAY_PUSH(return_value, String(str_value));
             } else {
-              return_value.add(String(cur_f->db_fname), Variant(String(str_value)));
+              ARRAY_ADD(return_value, cur_f->db_fname, String(str_value));
             }
           }
           else {
             if (!assoc) {
-              return_value.add(return_value.size(), Variant(int_value));
+              ARRAY_PUSH(return_value, int_value);
             } else {
-              return_value.add(String(cur_f->db_fname), Variant(int_value));
+              ARRAY_ADD(return_value, cur_f->db_fname, int_value);
             }
           }
         } else {
           if (!assoc) {
-            return_value.add(return_value.size(), Variant(atof(str_value)));
+            ARRAY_PUSH(return_value, atof(str_value));
           } else {
-            return_value.add(String(cur_f->db_fname), Variant(atof(str_value)));
+            ARRAY_ADD(return_value, cur_f->db_fname, atof(str_value));
           }
         }
         break;
       case 'F':
         if (!assoc) {
-          return_value.add(return_value.size(), Variant(atof(str_value)));
+          ARRAY_PUSH(return_value, atof(str_value));
         } else {
-          return_value.add(String(cur_f->db_fname), Variant(atof(str_value)));
+          ARRAY_ADD(return_value, cur_f->db_fname, atof(str_value));
         }
         break;
       case 'L':
@@ -215,9 +239,9 @@ static Variant dbase_get_record_impl(int64_t dbase_identifier, int64_t record_nu
             bool_value = true;
           }
           if (!assoc) {
-            return_value.add(return_value.size(), Variant(bool_value));
+            ARRAY_PUSH(return_value, bool_value);
           } else {
-            return_value.add(String(cur_f->db_fname), Variant(bool_value));
+            ARRAY_ADD(return_value, cur_f->db_fname, bool_value);
           }
         }
         break;
@@ -237,7 +261,7 @@ static Variant dbase_get_record_impl(int64_t dbase_identifier, int64_t record_nu
     // mark whether this record was deleted
     assert(data != nullptr);
     int deleted = (data[0] == '*' ? 1 : 0);
-    return_value.add(String("deleted"), Variant(deleted));
+    ARRAY_ADD(return_value, "deleted", deleted);
 
     free(data);
 
@@ -467,7 +491,7 @@ static Variant HHVM_FUNCTION(dbase_get_header_info, int64_t dbase_identifier) {
       // offset within record
       field.set(String("offset"), Variant(cur_f->db_foffset));
 
-      return_value.add(return_value.size(), Variant(field));
+      ARRAY_PUSH(return_value, field);
     }
     return Variant(return_value);
   } else {
