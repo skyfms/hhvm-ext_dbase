@@ -1,6 +1,6 @@
 /*
    dBase extension for HHVM.
-   Copyright (c) 2013 SIA Intelligent Systems.
+   Copyright (c) 2013-2020 SIA Intelligent Systems.
    
    Based on PECL dbase extension with the following copyright:
 
